@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>ジャンプ作家コメント</title>
+        <style>
+            h1 {
+                text-align: center;
+            }
+            svg#author {
+                width: 300px;
+                height: 600px;
+                border: solid 1px #4bb9ee;
+                margin: 0 auto;
+            }
+            .editor {
+                display: flex;
+                flex-wrap: wrap;
+                max-width: 700px;
+                margin: 0 auto;
+            }
+            .editor > div {
+                padding: 10px;
+                margin: 0 auto;
+            }
+            form > div {
+                margin-bottom: 10px;
+            }
+            textarea {
+                width: 300px;
+                min-height: 4em;
+            }
+            .share > div {
+                padding: 5px;
+            }
+            footer {
+                text-align: center;
+                max-width: 700px;
+                margin: 0 auto;
+            }
+            footer > nav {
+                margin-top: 10px;
+            }
+            .twitter-tweet {
+                margin: 0 auto;
+            }
+            .twitter-profile {
+                display: inline-block;
+                vertical-align: top;
+                zoom: 1;
+                height: 20px;
+                box-sizing: border-box;
+                padding: 1px 8px 1px 6px;
+                background-color: #1b95e0;
+                color: #fff;
+                border-radius: 3px;
+                font-weight: 500;
+                cursor: pointer;
+                outline: 0;
+                text-decoration: none;
+                font: normal normal normal 11px/18px 'Helvetica Neue',Arial,sans-serif;
+            }
+        </style>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/croppie/2.6.5/croppie.css" integrity="sha512-2eMmukTZtvwlfQoG8ztapwAH5fXaQBzaMqdljLopRSA0i6YKM8kBAOrSSykxu9NN9HrtD45lIqfONLII2AFL/Q==" crossorigin="anonymous" />
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/croppie/2.6.5/croppie.min.js" integrity="sha512-Gs+PsXsGkmr+15rqObPJbenQ2wB3qYvTHuJO6YJzPe/dTLvhy0fmae2BcnaozxDo5iaF8emzmCZWbQ1XXiX2Ig==" crossorigin="anonymous"></script>
+        <script>
+            document.addEventListener('DOMContentLoaded', (event) => {
+                // https://foliotek.github.io/Croppie/
+                // https://qiita.com/horikeso/items/928ccfc74048b9371a4a
+                const croppie = new Croppie(document.getElementById('croppie'), {
+                    enableExif: false,
+                    viewport: {
+                        width: 200,
+                        height: 200,
+                    },
+                    boundary: {
+                        width: 300,
+                        height: 300,
+                    },
+                    showZoomer: true,
+                    enableResize: false,
+                    enableOrientation: true,
+                    mouseWheelZoom: 'ctrl',
+                });
+
+                document.querySelector('input[name="image"]').addEventListener('change', (e) => {
+                    const file = e.target.files[0];
+                    console.log(file);
+
+                    if (typeof file === 'undefined') {
+                        return;
+                    }
+
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        console.log(e.target.result);
+                        croppie.bind({
+                            url: e.target.result,
+                        }).then(function() {
+                            var slider = document.querySelector('.cr-slider');
+                            slider.setAttribute('max', parseFloat(slider.getAttribute('min')) + 5);
+                        });
+                        document.getElementById('ok').removeAttribute('disabled');
+                    }
+                    reader.readAsDataURL(file);
+                });
+
+                document.getElementById('ok').addEventListener('click', function (e){
+                    e.preventDefault();
+                    croppie.result('base64').then(function(base64) {
+                        const svg = document.getElementById('author');
+                        const image = svg.getElementsByTagName('image')[0];
+                        image.setAttribute('href', base64);
+                    });
+                });
+
+                document.querySelector('input[name="name"').addEventListener('input', (e) => {
+                    const svg = document.getElementById('author');
+                    const name = svg.getElementsByTagName('text')[0];
+                    name.textContent = e.target.value;
+                });
+
+                document.querySelector('textArea[name="comment"').addEventListener('input', (e) => {
+                    const svg = document.getElementById('author');
+                    const comment = svg.getElementsByTagName('text')[1];
+                    while (comment.firstChild) {
+                        comment.removeChild(comment.firstChild);
+                    }
+                    const lines = e.target.value.split('\n');
+                    lines.forEach((line, i) => {
+                        const tspan = document.createElementNS("http://www.w3.org/2000/svg", "tspan");
+                        tspan.textContent = line;
+                        const lineWidth = 20;
+                        const parentX = Number(comment.getAttribute('x'));
+                        const x = parentX - lineWidth * i + lineWidth * (lines.length - 1) / 2;
+                        tspan.setAttribute('x', x);
+                        tspan.setAttribute('y', comment.getAttribute('y'));
+                        comment.appendChild(tspan);
+                    });;
+                });
+
+                document.getElementById('copy').addEventListener('click', () => {
+                    const svg = document.getElementById('author');
+                    const xml = new XMLSerializer().serializeToString(svg);
+                    const blob = new Blob([xml], { type: 'image/svg+xml;charset=utf-8' });
+
+                    // https://blog.asial.co.jp/1615
+                    // http://var.blog.jp/archives/79909512.html
+                    // https://stackoverflow.com/questions/3975499/convert-svg-to-image-jpeg-png-etc-in-the-browser
+                    // https://developer.mozilla.org/ja/docs/Web/API/Window/devicePixelRatio
+                    const canvas = document.createElement('canvas');
+                    canvas.style.width = svg.width.baseVal.value;
+                    canvas.style.height = svg.height.baseVal.value;
+                    const scale = window.devicePixelRatio;
+                    canvas.width = svg.width.baseVal.value * scale;
+                    canvas.height = svg.height.baseVal.value * scale;
+                    const ctx = canvas.getContext('2d');
+                    ctx.scale(scale, scale);
+                    const image = new Image();
+                    image.addEventListener('load', () => {
+                        ctx.drawImage(image, 0, 0);
+                        canvas.toBlob((blob) => {
+                            const item = new ClipboardItem({ 'image/png': blob });
+                            navigator.clipboard.write([item]);
+                            // open(URL.createObjectURL(blob));
+                        });
+                    });
+                    image.src = 'data:image/svg+xml;charset=utf-8;base64,' + btoa(unescape(encodeURIComponent(xml)));
+                });
+            });
+        </script>
+        <!-- Global site tag (gtag.js) - Google Analytics -->
+        <script async src="https://www.googletagmanager.com/gtag/js?id=G-HBQ901QQW0"></script>
+        <script>
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+
+            gtag('config', 'G-HBQ901QQW0');
+        </script>
+    </head>
+    <body>
+        <h1>ジャンプ作家コメント</h1>
+        <section class="editor">
+            <div class="preview">
+                <svg width="300" height="600" viewBox="0, 0, 300, 600" id="author">
+                    <style>
+                        svg {
+                            background-color: white;
+                        }
+                    </style>
+                    <rect x="50" y="60" width="200" height="200" fill="none" stroke="#4bb9ee" stroke-width="1" />
+                    <image href="" x="50" y="60" height="200" width="200"/>
+                    <text x="150" y="290" font-family="Arial, Helvetica, sans-serif" font-weight="bold" font-size="28" text-anchor="middle"></text>
+                    <line x1="50" y1="300" x2="250" y2="300" stroke="#4bb9ee" stroke-width="3" />
+                    <text x="150" y="350" font-family="serif" font-weight="bold" font-size="14" writing-mode="tb"></text>
+                </svg>
+            </div>
+            <div class="input">
+                <form>
+                    <div>
+                        <div id="croppie"></div>
+                        <input type="file" name="image" accept="image/*">
+                        <button id="ok" disabled>OK</button>
+                    </div>
+                    <div>
+                        <input type="text" name="name" placeholder="作者">
+                    </div>
+                    <div>
+                        <textarea name="comment" placeholder="コメント"></textarea>
+                    </div>
+                </form>
+                <hr>
+                <div class="share">
+                    <div>
+                        <button id="copy">クリップボードにコピー</button>
+                    </div>
+                    <div>
+                        コピーしたら <a href="https://twitter.com/intent/tweet?hashtags=ジャンプ作家コメント" target="_blank">Twitter</a> にペースト
+                    </div>
+                </div>
+            </div>
+        </section>
+        <footer>
+            <details>
+                <summary>元ネタ</summary>
+                <blockquote class="twitter-tweet"><p lang="ja" dir="ltr">このフォーマットを使って日記を書くとジャンプ作家みたいになれます <a href="https://t.co/hgie77uEdH">pic.twitter.com/hgie77uEdH</a></p>&mdash; 雨穴 (@uketsuHAKONIWA) <a href="https://twitter.com/uketsuHAKONIWA/status/1366015291201703945?ref_src=twsrc%5Etfw">February 28, 2021</a></blockquote> <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+            </details>
+            <nav>
+                <a href="https://twitter.com/share?ref_src=twsrc%5Etfw" class="twitter-share-button" data-show-count="false">Tweet</a><script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+                <a href="https://twitter.com/snow_cait" target="_blank" class="twitter-profile">@snow_cait</a>
+                <a href="https://snowcait.github.io/jump-author-comment/"><img src="GitHub_Logo.png" alt="GitHub" height="20"></a>
+            </nav>
+        </footer>
+    </body>
+</html>
