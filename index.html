@@ -137,7 +137,7 @@
                         tspan.setAttribute('x', x);
                         tspan.setAttribute('y', comment.getAttribute('y'));
                         comment.appendChild(tspan);
-                    });;
+                    });
                 });
 
                 document.getElementById('copy').addEventListener('click', () => {
@@ -163,7 +163,7 @@
                         canvas.toBlob((blob) => {
                             const item = new ClipboardItem({ 'image/png': blob });
                             navigator.clipboard.write([item]);
-                            // open(URL.createObjectURL(blob));
+                            open(URL.createObjectURL(blob));
                         });
                     });
                     image.src = 'data:image/svg+xml;charset=utf-8;base64,' + btoa(unescape(encodeURIComponent(xml)));
