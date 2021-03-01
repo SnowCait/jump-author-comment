@@ -3,6 +3,7 @@
     <head>
         <meta charset="utf-8">
         <title>ジャンプ作家日記</title>
+        <meta name="viewport" content="width=device-width,initial-scale=1">
         <meta name="description" content="ジャンプコミックス表紙そでの作家コメント画像を作成できます。">
         <style>
             h1 {
@@ -160,10 +161,15 @@
                     const image = new Image();
                     image.addEventListener('load', () => {
                         ctx.drawImage(image, 0, 0);
-                        canvas.toBlob((blob) => {
+                        canvas.toBlob(async (blob) => {
                             const item = new ClipboardItem({ 'image/png': blob });
-                            navigator.clipboard.write([item]);
-                            open(URL.createObjectURL(blob));
+                            try {
+                                await navigator.clipboard.write([item]);
+                                console.log('Copied');
+                            } catch (exception) {
+                                console.error(exception);
+                                open(URL.createObjectURL(blob));
+                            }
                         });
                     });
                     image.src = 'data:image/svg+xml;charset=utf-8;base64,' + btoa(unescape(encodeURIComponent(xml)));
