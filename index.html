@@ -35,6 +35,9 @@
             .share > div {
                 padding: 5px;
             }
+            #copied {
+                color: lightseagreen;
+            }
             footer {
                 text-align: center;
                 max-width: 700px;
@@ -165,7 +168,11 @@
                             const item = new ClipboardItem({ 'image/png': blob });
                             try {
                                 await navigator.clipboard.write([item]);
-                                console.log('Copied');
+                                const copied = document.getElementById('copied');
+                                copied.hidden = false;
+                                setTimeout((e) => {
+                                    copied.hidden = true;
+                                }, 2 * 1000);
                             } catch (exception) {
                                 console.error(exception);
                                 open(URL.createObjectURL(blob));
@@ -221,6 +228,7 @@
                 <div class="share">
                     <div>
                         <button id="copy">クリップボードにコピー</button>
+                        <span id="copied" hidden>Copied!</span>
                     </div>
                     <div>
                         コピーしたら <a href="https://twitter.com/intent/tweet?hashtags=ジャンプ作家日記" target="_blank">Twitter</a> にペースト
