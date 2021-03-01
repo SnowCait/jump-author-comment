@@ -1,1 +1,1 @@
-# jump-author-comment
+# ジャンプ作家コメントジェネレーター
